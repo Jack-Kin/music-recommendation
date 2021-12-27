@@ -1,0 +1,61 @@
+import json
+import random
+import warnings
+
+import spotipy
+import spotipy.util as util
+import requests
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+from tqdm import tqdm
+
+
+# username = ''
+scope = 'user-follow-read'
+util.prompt_for_user_token(username,scope,
+                        #   client_id='',
+                        #   client_secret='',
+                          redirect_uri='http://localhost:8888/callback')
+# token=''
+headers = {"Authorization": "Bearer {}".format(token)}
+responses=requests.get("https://api.spotify.com/v1/me/following?type=artist", headers=headers)
+myjson_data = json.loads(responses.text)
+# print(myjson_data)
+# # song's attribute
+my_songs_attributes = []
+#song'name 
+my_songs_names = []
+my_songs_ids = []
+
+def get_song_attributes(response_text):
+    return json.loads(response_text)
+
+followed_artist_name=[]
+followed_artist_genre=[]
+followed_artist_follower=[]
+followed_artist_popularity=[]
+
+
+follow=[]
+for artist in myjson_data.get('artists').get('items'):
+    artist_name=artist.get('name')
+    artist_genre=artist.get('genres')
+    artist_followers=artist.get('followers').get('total')
+    artist_popularity=artist.get('popularity')
+    followed={}
+    followed['name']=artist_name
+    followed['genre']=artist_genre
+    followed['follower']=artist_followers
+    followed['popularity']=artist_popularity
+    follow.append(followed)
+
+follow_df=pd.DataFrame(follow)
+print(follow_df)
+df_path='E:\Columbia\Big data\HW3\hw3_startcode_and_data\django\hw3_tutorial\\followartist.csv'
+follow_df.to_csv(df_path, index=False)
+
+
+

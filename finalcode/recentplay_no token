@@ -1,0 +1,65 @@
+import json
+import random
+import warnings
+
+import spotipy
+import spotipy.util as util
+import requests
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+from tqdm import tqdm
+
+# username = ''
+scope = 'user-library-read'
+util.prompt_for_user_token(username,scope,
+                        #   client_id='',
+                        #   client_secret='',
+                          redirect_uri='http://localhost:8888/callback')
+# token=''
+headers = {"Authorization": "Bearer {}".format(token)}
+responses=requests.get("https://api.spotify.com/v1/me/player/recently-played", headers=headers)
+myjson_data = json.loads(responses.text)
+
+# song's attribute
+my_songs_attributes = []
+#song'name 
+my_songs_names = []
+my_songs_ids = []
+
+def get_song_attributes(response_text):
+    return json.loads(response_text)
+
+for item in myjson_data.get('items'):
+    song_ids = item['track']['uri'].split(':')[2]
+    song_name = item['track']['name']
+    song_attributes = requests.get(f"https://api.spotify.com/v1/audio-features/{song_ids}", headers=headers)
+    my_songs_attributes.append(get_song_attributes(song_attributes.text))
+    my_songs_names.append(song_name)
+    my_songs_ids.append(song_ids)
+
+
+recentplay=[]
+for i in range(len(my_songs_names)):
+    recent={}
+    recent['id']= my_songs_ids[i]
+    recent['name']=my_songs_names[i]
+    recent['acousticness'] = my_songs_attributes[i].get('acousticness')
+    recent['speechiness'] =  my_songs_attributes[i].get('speechiness')
+    recent['key'] =  my_songs_attributes[i].get('key')
+    recent['liveness'] = my_songs_attributes[i].get('liveness')
+    recent['instrumentalness'] =  my_songs_attributes[i].get('instrumentalness')
+    recent['energy'] =  my_songs_attributes[i].get('energy')
+    recent['tempo'] =  my_songs_attributes[i].get('tempo')
+    recent['time_signature'] =  my_songs_attributes[i].get('time_signature')
+    recent['loudness'] =  my_songs_attributes[i].get('loudness')
+    recent['danceability'] = my_songs_attributes[i].get('danceability')
+    recent['valence'] = my_songs_attributes[i].get('valence')
+    recentplay.append(recent)
+
+recentplay_df=pd.DataFrame(recentplay)
+print(recentplay_df)
+df_path='E:\Columbia\Big data\HW3\hw3_startcode_and_data\django\hw3_tutorial\\recentplay.csv'
+recentplay_df.to_csv(df_path, index=False)
